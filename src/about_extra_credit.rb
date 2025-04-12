@@ -1,3 +1,4 @@
+# typed: strict
 # EXTRA CREDIT:
 #
 # Create a program that will play the Greed Game.
