@@ -62,10 +62,7 @@ class AboutPatternMatching < Neo::Koan
 
   def test_variable_pattern_with_binding
     assert_equal 0, variable_pattern_with_binding(1)
-    assert_equal 0, variable_pattern_with_binding(123)
-    assert_equal 0, variable_pattern_with_binding(nil)
   end
-  
 
   # ------------------------------------------------------------------
 

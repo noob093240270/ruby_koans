@@ -1,72 +1,69 @@
 # typed: strict
 require File.expand_path(File.dirname(__FILE__) + '/neo')
 
-# Implement a DiceSet Class here:
-#
-class DiceSet
-   attr_accessor :values
+class AboutExceptions < Neo::Koan
 
-   def roll(int)
-     @values = []
-     for __ in (1..int)
-       values << rand(1..6)
-     end
-
-   end
-end
-
-class AboutDiceProject < Neo::Koan
-  def test_can_create_a_dice_set
-    dice = DiceSet.new
-    assert_not_nil dice
+  class MySpecialError < RuntimeError
   end
 
-  def test_rolling_the_dice_returns_a_set_of_integers_between_1_and_6
-    dice = DiceSet.new
+  def test_exceptions_inherit_from_Exception
+    assert_equal RuntimeError, MySpecialError.ancestors[1]
+    assert_equal StandardError, MySpecialError.ancestors[2]
+    assert_equal Exception, MySpecialError.ancestors[3]
+    assert_equal Object, MySpecialError.ancestors[4]
+  end
 
-    dice.roll(5)
-    assert dice.values.is_a?(Array), "should be an array"
-    assert_equal 5, dice.values.size
-    dice.values.each do |value|
-      assert value >= 1 && value <= 6, "value #{value} must be between 1 and 6"
+  def test_rescue_clause
+    result = nil
+    begin
+      fail "Oops"
+    rescue StandardError => ex
+      result = :exception_handled
     end
+
+    assert_equal :exception_handled, result
+
+    assert_equal true, ex.is_a?(StandardError), "Should be a Standard Error"
+    assert_equal true, ex.is_a?(RuntimeError),  "Should be a Runtime Error"
+
+    assert RuntimeError.ancestors.include?(StandardError),
+      "RuntimeError is a subclass of StandardError"
+
+    assert_equal "Oops", ex.message
   end
 
-  def test_dice_values_do_not_change_unless_explicitly_rolled
-    dice = DiceSet.new
-    dice.roll(5)
-    first_time = dice.values
-    second_time = dice.values
-    assert_equal first_time, second_time
+  def test_raising_a_particular_error
+    result = nil
+    begin
+      # 'raise' and 'fail' are synonyms
+      raise MySpecialError, "My Message"
+    rescue MySpecialError => ex
+      result = :exception_handled
+    end
+
+    assert_equal :exception_handled, result
+    assert_equal "My Message", ex.message
   end
 
-  def test_dice_values_should_change_between_rolls
-    dice = DiceSet.new
+  def test_ensure_clause
+    result = nil
+    begin
+      fail "Oops"
+    rescue StandardError
+      # no code here
+    ensure
+      result = :always_run
+    end
 
-    dice.roll(5)
-    first_time = dice.values
-
-    dice.roll(5)
-    second_time = dice.values
-
-    assert_not_equal first_time, second_time,
-      "Two rolls should not be equal"
-
-    # THINK ABOUT IT:
-    #
-    # If the rolls are random, then it is possible (although not
-    # likely) that two consecutive rolls are equal.  What would be a
-    # better way to test this?
+    assert_equal :always_run, result
   end
 
-  def test_you_can_roll_different_numbers_of_dice
-    dice = DiceSet.new
-
-    dice.roll(3)
-    assert_equal 3, dice.values.size
-
-    dice.roll(1)
-    assert_equal 1, dice.values.size
+  # Sometimes, we must know about the unknown
+  def test_asserting_an_error_is_raised
+    # A do-end is a block, a topic to explore more later
+    assert_raise(MySpecialError) do
+      raise MySpecialError.new("New instances can be raised directly.")
+    end
   end
 
 end

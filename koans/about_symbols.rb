@@ -25,7 +25,7 @@ class AboutSymbols < Neo::Koan
   end
 
   def test_method_names_become_symbols
-    symbols_as_strings = Symbol.all_symbols.map(&:to_s)
+    symbols_as_strings = Symbol.all_symbols.map { |x| x.to_s }
     assert_equal true, symbols_as_strings.include?("test_method_names_become_symbols")
   end
 
@@ -33,18 +33,12 @@ class AboutSymbols < Neo::Koan
   #
   # Why do we convert the list of symbols to strings and then compare
   # against the string value rather than against symbols?
-  #
-  # — Потому что создавая новый символ для сравнения, мы его добавляем
-  # в глобальный символ-табл, что увеличивает память (символы не GC-убираются)
-  # А через строки этого не происходит.
 
   in_ruby_version("mri") do
     RubyConstant = "What is the sound of one hand clapping?"
-
     def test_constants_become_symbols
-      all_symbols_as_strings = Symbol.all_symbols.map(&:to_s)
+      all_symbols_as_strings = Symbol.all_symbols.map { |x| x.to_s }
 
-      # Ruby 3.x не добавляет строки-константы в Symbol.all_symbols
       assert_equal false, all_symbols_as_strings.include?(RubyConstant)
     end
   end
@@ -56,18 +50,21 @@ class AboutSymbols < Neo::Koan
 
   def test_symbols_with_spaces_can_be_built
     symbol = :"cats and dogs"
+
     assert_equal "cats and dogs".to_sym, symbol
   end
 
   def test_symbols_with_interpolation_can_be_built
     value = "and"
     symbol = :"cats #{value} dogs"
+
     assert_equal "cats and dogs".to_sym, symbol
   end
 
   def test_to_s_is_called_on_interpolated_symbols
     symbol = :cats
     string = "It is raining #{symbol} and dogs."
+
     assert_equal "It is raining cats and dogs.", string
   end
 
@@ -83,7 +80,12 @@ class AboutSymbols < Neo::Koan
     assert_equal false, symbol.respond_to?(:reverse)
   end
 
+  # It's important to realize that symbols are not "immutable
+  # strings", though they are immutable. None of the
+  # interesting string operations are available on symbols.
+
   def test_symbols_cannot_be_concatenated
+    # Exceptions will be pondered further down the path
     assert_raise(NoMethodError) do
       :cats + :dogs
     end
@@ -91,13 +93,10 @@ class AboutSymbols < Neo::Koan
 
   def test_symbols_can_be_dynamically_created
     assert_equal :catsdogs, ("cats" + "dogs").to_sym
+    
   end
 
   # THINK ABOUT IT:
   #
-  # Почему не стоит динамически создавать много символов?
-  #
-  # — Потому что символы остаются в памяти до завершения работы программы (не очищаются сборщиком мусора),
-  # и если постоянно генерировать новые символы динамически (через to_sym, например, из строк),
-  # это может привести к утечке памяти.
+  # Why is it not a good idea to dynamically create a lot of symbols?
 end
