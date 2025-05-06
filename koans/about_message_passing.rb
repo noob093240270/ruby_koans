@@ -11,37 +11,36 @@ class AboutMessagePassing < Neo::Koan
 
   def test_methods_can_be_called_directly
     mc = MessageCatcher.new
-
     assert mc.caught?
   end
 
   def test_methods_can_be_invoked_by_sending_the_message
     mc = MessageCatcher.new
-
     assert mc.send(:caught?)
   end
 
   def test_methods_can_be_invoked_more_dynamically
     mc = MessageCatcher.new
-
     assert mc.send("caught?")
-    assert mc.send("caught" + "?" )    # What do you need to add to the first string?
-    assert mc.send("CAUGHT?".downcase )      # What would you need to do to the string?
+    assert mc.send("caught" + "?")
+    assert mc.send("CAUGHT?".downcase)
   end
 
   def test_send_with_underscores_will_also_send_messages
     mc = MessageCatcher.new
-
     assert_equal true, mc.__send__(:caught?)
 
     # THINK ABOUT IT:
     #
-    # Why does Ruby provide both send and __send__ ?
+    # Почему в Ruby есть и send, и __send__ ?
+    #
+    # Ответ:
+    # __send__ существует на случай, если у объекта уже определён свой метод send,
+    # чтобы всё равно иметь доступ к универсальному механизму отправки сообщений.
   end
 
   def test_classes_can_be_asked_if_they_know_how_to_respond
     mc = MessageCatcher.new
-
     assert_equal true, mc.respond_to?(:caught?)
     assert_equal false, mc.respond_to?(:does_not_exist)
   end
@@ -63,13 +62,6 @@ class AboutMessagePassing < Neo::Koan
     assert_equal [3,4,nil,6], mc.add_a_payload(3, 4, nil, 6)
     assert_equal [3,4,nil,6], mc.send(:add_a_payload, 3, 4, nil, 6)
   end
-
-  # NOTE:
-  #
-  # Both obj.msg and obj.send(:msg) sends the message named :msg to
-  # the object. We use "send" when the name of the message can vary
-  # dynamically (e.g. calculated at run time), but by far the most
-  # common way of sending a message is just to say: obj.msg.
 
   # ------------------------------------------------------------------
 
@@ -95,20 +87,8 @@ class AboutMessagePassing < Neo::Koan
 
     # THINK ABOUT IT:
     #
-    # If the method :method_missing causes the NoMethodError, then
-    # what would happen if we redefine method_missing?
-    #
-    # NOTE:
-    #
-    # In Ruby 1.8 the method_missing method is public and can be
-    # called as shown above. However, in Ruby 1.9 (and later versions)
-    # the method_missing method is private. We explicitly made it
-    # public in the testing framework so this example works in both
-    # versions of Ruby. Just keep in mind you can't call
-    # method_missing like that after Ruby 1.9 normally.
-    #
-    # Thanks.  We now return you to your regularly scheduled Ruby
-    # Koans.
+    # Если бы мы переопределили method_missing,
+    # то могли бы перехватывать любые вызовы несуществующих методов.
   end
 
   # ------------------------------------------------------------------
@@ -140,7 +120,7 @@ class AboutMessagePassing < Neo::Koan
 
   class WellBehavedFooCatcher
     def method_missing(method_name, *args, &block)
-      if method_name.to_s[0,3] == "foo"
+      if method_name.to_s.start_with?("foo")
         "Foo to you too"
       else
         super(method_name, *args, &block)
@@ -150,7 +130,6 @@ class AboutMessagePassing < Neo::Koan
 
   def test_foo_method_are_caught
     catcher = WellBehavedFooCatcher.new
-
     assert_equal "Foo to you too", catcher.foo_bar
     assert_equal "Foo to you too", catcher.foo_baz
   end
@@ -165,10 +144,9 @@ class AboutMessagePassing < Neo::Koan
 
   # ------------------------------------------------------------------
 
-  # (note: just reopening class from above)
   class WellBehavedFooCatcher
     def respond_to?(method_name)
-      if method_name.to_s[0,3] == "foo"
+      if method_name.to_s.start_with?("foo")
         true
       else
         super(method_name)
